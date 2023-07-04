@@ -1,0 +1,9 @@
+Debug/
+Release/
+.vscode/
+.settings/
+.vscode/
+.vs/
+build/
+CMakePresets.json
+vcpkg-configuration.json
