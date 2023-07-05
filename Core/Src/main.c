@@ -61,7 +61,7 @@ UART_HandleTypeDef huart2;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
@@ -93,12 +93,12 @@ void mch_net_init(void)
 
   mchdrv_netif.hwaddr_len = 6;
   /* demo mac address */
-  mchdrv_netif.hwaddr[0] = 0;
-  mchdrv_netif.hwaddr[1] = 1;
-  mchdrv_netif.hwaddr[2] = 2;
-  mchdrv_netif.hwaddr[3] = 3;
-  mchdrv_netif.hwaddr[4] = 4;
-  mchdrv_netif.hwaddr[5] = 5;
+  mchdrv_netif.hwaddr[0] = 0xee;
+  mchdrv_netif.hwaddr[1] = 0x1e;
+  mchdrv_netif.hwaddr[2] = 0x2e;
+  mchdrv_netif.hwaddr[3] = 0x3e;
+  mchdrv_netif.hwaddr[4] = 0x4e;
+  mchdrv_netif.hwaddr[5] = 0x5e;
 
   IP4_ADDR(&gw_addr, 192, 168, 1, 1);
   IP4_ADDR(&mch_myip_addr, 192, 168, 1, 211);
@@ -403,6 +403,7 @@ void StartDefaultTask(void *argument)
   {
     mch_net_poll();
     sys_check_timeouts();
+    osDelay(pdMS_TO_TICKS(2));
   }
   /* USER CODE END 5 */
 }

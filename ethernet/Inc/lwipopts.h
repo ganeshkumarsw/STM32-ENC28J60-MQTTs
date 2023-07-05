@@ -115,11 +115,11 @@
 
 /* ---------- Pbuf options ---------- */
 /* PBUF_POOL_SIZE: the number of buffers in the pbuf pool. */
-#define PBUF_POOL_SIZE         	 		(30)
+#define PBUF_POOL_SIZE         	 		(40)
 //#define PBUF_POOL_SIZE                  400 /* pbuf tests need ~200KByte */
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
-#define PBUF_POOL_BUFSIZE       		   512
+#define PBUF_POOL_BUFSIZE       		   256
 /* MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP
    segments. */
 // #define MEMP_NUM_TCP_SEG               TCP_SND_QUEUELEN

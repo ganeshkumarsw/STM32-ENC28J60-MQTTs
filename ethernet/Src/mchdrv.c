@@ -17,14 +17,14 @@ void mchdrv_poll(struct netif *netif)
 	{
 		if (enc_read_received_pbuf(encdevice, &buf) == 0)
 		{
-			LWIP_DEBUGF(NETIF_DEBUG, ("incoming: %d packages, first read into %x\n", epktcnt, (unsigned int)(buf)));
+			LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] incoming: %d packages, first read into %x\n", epktcnt, (unsigned int)(buf)));
 			result = netif->input(buf, netif);
-			LWIP_DEBUGF(NETIF_DEBUG, ("received with result %d\n", result));
+			LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] received with result %d\n", result));
 		}
 		else
 		{
 			/* FIXME: error reporting */
-			LWIP_DEBUGF(NETIF_DEBUG, ("didn't receive.\n"));
+			LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] didn't receive.\n"));
 		}
 	}
 }
@@ -33,7 +33,7 @@ static err_t mchdrv_linkoutput(struct netif *netif, struct pbuf *p)
 {
 	enc_device_t *encdevice = (enc_device_t *)netif->state;
 	enc_transmit_pbuf(encdevice, p);
-	LWIP_DEBUGF(NETIF_DEBUG, ("sent %d bytes.\n", p->tot_len));
+	LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] sent %d bytes.\n", p->tot_len));
 	/* FIXME: evaluate result state */
 	return ERR_OK;
 }
@@ -43,18 +43,18 @@ err_t mchdrv_init(struct netif *netif)
 	int result;
 	enc_device_t *encdevice = (enc_device_t *)netif->state;
 
-	LWIP_DEBUGF(NETIF_DEBUG, ("Starting mchdrv_init.\n"));
+	LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] Starting mchdrv_init.\n"));
 
 	result = enc_setup_basic(encdevice);
 	if (result != 0)
 	{
-		LWIP_DEBUGF(NETIF_DEBUG, ("Error %d in enc_setup, interface setup aborted.\n", result));
+		LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] Error %d in enc_setup, interface setup aborted.\n", result));
 		return 2; // ERR_IF;
 	}
 	result = enc_bist_manual(encdevice);
 	if (result != 0)
 	{
-		LWIP_DEBUGF(NETIF_DEBUG, ("Error %d in enc_bist_manual, interface setup aborted.\n", result));
+		LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] Error %d in enc_bist_manual, interface setup aborted.\n", result));
 		return 4; // ERR_IF;
 	}
 	enc_ethernet_setup(encdevice, 4 * 1024, netif->hwaddr);
@@ -66,7 +66,7 @@ err_t mchdrv_init(struct netif *netif)
 
 	netif->flags |= NETIF_FLAG_ETHARP | NETIF_FLAG_LINK_UP;
 
-	LWIP_DEBUGF(NETIF_DEBUG, ("Driver initialized.\n"));
+	LWIP_DEBUGF(NETIF_DEBUG, ("[lwip] Driver initialized.\n"));
 
 	return ERR_OK;
 }

@@ -87,12 +87,12 @@ uint8_t enc_bist(enc_device_t *dev)
 	enc_BFS(dev, ENC_EBSTCON, ENC_EBSTCON_BISTST);
 	/* wait a second -- never took any time yet */
 	while (enc_RCR(dev, ENC_EBSTCON) & ENC_EBSTCON_BISTST)
-		DEBUG_PRINT("(%02x)", enc_RCR(dev, ENC_EBSTCON));
+		DEBUG_PRINT("[enc] (%02x)", enc_RCR(dev, ENC_EBSTCON));
 	/* 7. */
 	enc_BFS(dev, ENC_ECON1, ENC_ECON1_DMAST);
 	/* 8. */
 	while (enc_RCR(dev, ENC_ECON1) & ENC_ECON1_DMAST)
-		DEBUG_PRINT("[%02x]", enc_RCR(dev, ENC_ECON1));
+		DEBUG_PRINT("[enc] [%02x]", enc_RCR(dev, ENC_ECON1));
 
 	/* 9.: @todo pull this in */
 
@@ -134,9 +134,9 @@ uint8_t enc_bist_manual(enc_device_t *dev)
 
 	enc_BFS(ENC_ECON1, ENC_ECON1_CSUMEN | ENC_ECON1_DMAST);
 
-	while (enc_RCR(ENC_ECON1) & ENC_ECON1_DMAST) DEBUG_PRINT(".");
+	while (enc_RCR(ENC_ECON1) & ENC_ECON1_DMAST) DEBUG_PRINT("[enc] .");
 
-	DEBUG_PRINT("csum %08x", enc_RCR16(ENC_EDMACSL));
+	DEBUG_PRINT("[enc] csum %08x", enc_RCR16(ENC_EDMACSL));
 	*/
 
 	return 0;
@@ -144,11 +144,11 @@ uint8_t enc_bist_manual(enc_device_t *dev)
 
 static uint8_t command(enc_device_t *dev, uint8_t first, uint8_t second)
 {
-//	uint8_t result;
+	//	uint8_t result;
 	uint8_t arr[2] = {first, second};
 	enchw_select(HWDEV);
-//	enchw_exchangebyte(HWDEV, first);
-//	result = enchw_exchangebyte(HWDEV, second);
+	//	enchw_exchangebyte(HWDEV, first);
+	//	result = enchw_exchangebyte(HWDEV, second);
 	enchw_txrxbytes(arr, 2);
 	enchw_unselect(HWDEV);
 	return arr[1];
@@ -156,15 +156,15 @@ static uint8_t command(enc_device_t *dev, uint8_t first, uint8_t second)
 
 static uint8_t command_with_dummyByte(enc_device_t *dev, uint8_t first, uint8_t second)
 {
-//	uint8_t result;
+	//	uint8_t result;
 	uint8_t arr[3] = {first, second, second};
 	enchw_select(HWDEV);
-//	enchw_exchangebyte(HWDEV, first);
-//
-//	/* Dummy byte*/
-//	enchw_exchangebyte(HWDEV, second);
-//
-//	result = enchw_exchangebyte(HWDEV, second);
+	//	enchw_exchangebyte(HWDEV, first);
+	//
+	//	/* Dummy byte*/
+	//	enchw_exchangebyte(HWDEV, second);
+	//
+	//	result = enchw_exchangebyte(HWDEV, second);
 	enchw_txrxbytes(arr, 3);
 	enchw_unselect(HWDEV);
 	return arr[2];
@@ -354,8 +354,10 @@ void enc_ethernet_setup(enc_device_t *dev, uint16_t rxbufsize, uint8_t mac[6])
 	enc_BFS(dev, ENC_MACON1, ENC_MACON1_MARXEN | ENC_MACON1_TXPAUS | ENC_MACON1_RXPAUS);
 
 	/* generate checksums for outgoing frames and manage padding automatically */
-	enc_WCR(dev, ENC_MACON3, ENC_MACON3_TXCRCEN | ENC_MACON3_FULLPADDING | ENC_MACON3_FRMLEN);
+	enc_WCR(dev, ENC_MACON3, ENC_MACON3_TXCRCEN | ENC_MACON3_FULLPADDING | ENC_MACON3_FRMLEN | ENC_MACON3_FULLDUPLEX);
 
+    /*  PDPXMD is set, PHY operates in Full-Duplex mode*/
+    enc_MII_write(dev, ENC_PHCON1, 0x0100);
 	/* setting defer is mandatory for 802.3, but it seems the default is reasonable too */
 
 	/* MAMXF has reasonable default */
@@ -374,6 +376,7 @@ void enc_ethernet_setup(enc_device_t *dev, uint16_t rxbufsize, uint8_t mac[6])
 	enc_WCR(dev, ENC_MAADR5, mac[4]);
 	enc_WCR(dev, ENC_MAADR6, mac[5]);
 
+	DEBUG_PRINT("[enc] MAC. %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	/*************** enabling reception as per 7.2 ***********/
 
 	/* enable reception */
@@ -429,7 +432,7 @@ void transmit_end(enc_device_t *dev, uint16_t length)
 
 	uint8_t result[7];
 	enc_RBM(dev, result, dev->rxbufsize + 1 + length, 7);
-	DEBUG_PRINT("transmitted. %02x %02x %02x %02x %02x %02x %02x\n", result[0], result[1], result[2], result[3], result[4], result[5], result[6]);
+	DEBUG_PRINT("[enc] transmitted. %02x %02x %02x %02x %02x %02x %02x\n", result[0], result[1], result[2], result[3], result[4], result[5], result[6]);
 
 	/** @todo parse that and return reasonable state */
 }
@@ -484,11 +487,11 @@ void receive_end(enc_device_t *dev, uint8_t header[6])
 		enc_WCR16(dev, ENC_ERXRDPTL, dev->next_frame_location - 1);
 	/* workaround end */
 
-	DEBUG_PRINT("before %d, ", enc_RCR(dev, ENC_EPKTCNT));
+	DEBUG_PRINT("[enc] before %d, ", enc_RCR(dev, ENC_EPKTCNT));
 	enc_BFS(dev, ENC_ECON2, ENC_ECON2_PKTDEC);
-	DEBUG_PRINT("after %d.\n", enc_RCR(dev, ENC_EPKTCNT));
+	DEBUG_PRINT("[enc] after %d.\n", enc_RCR(dev, ENC_EPKTCNT));
 
-	DEBUG_PRINT("read with header (%02x %02x) %02x %02x %02x %02x.\n", header[1], /* swapped due to endianness -- i want to read 1234 */ header[0], header[2], header[3], header[4], header[5]);
+	DEBUG_PRINT("[enc] read with header (%02x %02x) %02x %02x %02x %02x.\n", header[1], /* swapped due to endianness -- i want to read 1234 */ header[0], header[2], header[3], header[4], header[5]);
 }
 
 /** Read a received frame into data; may only be called when one is
@@ -505,7 +508,7 @@ uint16_t enc_read_received(enc_device_t *dev, uint8_t *data, uint16_t maxlength)
 	if (length > maxlength)
 	{
 		enc_RBM(dev, data, ENC_READLOCATION_ANY, maxlength);
-		DEBUG_PRINT("discarding some bytes\n");
+		DEBUG_PRINT("[enc] discarding some bytes\n");
 		/** @todo should that really be accepted at all? */
 	}
 	else
@@ -533,7 +536,7 @@ int enc_read_received_pbuf(enc_device_t *dev, struct pbuf **buf)
 
 	*buf = pbuf_alloc(PBUF_RAW, length, PBUF_RAM);
 	if (*buf == NULL)
-		DEBUG_PRINT("failed to allocate buf of length %u, discarding", length);
+		DEBUG_PRINT("[enc] failed to allocate buf of length %u, discarding", length);
 	else
 		enc_RBM(dev, (*buf)->payload, ENC_READLOCATION_ANY, length);
 
