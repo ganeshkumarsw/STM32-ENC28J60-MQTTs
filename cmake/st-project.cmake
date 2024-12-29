@@ -3,41 +3,30 @@
 
 function(add_st_target_properties TARGET_NAME)
 
-target_compile_definitions(
+    target_compile_definitions(
     ${TARGET_NAME} PRIVATE
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:ASM>>:DEBUG>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:DEBUG>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:ENC28J60_USE_PBUF>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:USE_HAL_DRIVER>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:STM32F446xx>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:USE_HAL_DRIVER>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:STM32F446xx>"
+    "DEBUG"
+    "ENC28J60_USE_PBUF"
+    "USE_HAL_DRIVER"
+    "STM32F446xx"
 )
 
-target_include_directories(
+    target_include_directories(
     ${TARGET_NAME} PRIVATE
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Core/Inc>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/ethernet/Inc>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/ethernet>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/LwIP/src/include>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Inc>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32F4xx/Include>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/CMSIS/Include>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2>"
-    "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Core/Inc>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Inc>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32F4xx/Include>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Drivers/CMSIS/Include>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2>"
-    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F>"
+    "${PROJECT_SOURCE_DIR}/Core/Inc"
+    "${PROJECT_SOURCE_DIR}/ethernet/Inc"
+    "${PROJECT_SOURCE_DIR}/ethernet"
+    "${PROJECT_SOURCE_DIR}/LwIP/src/include"
+    "${PROJECT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Inc"
+    "${PROJECT_SOURCE_DIR}/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy"
+    "${PROJECT_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32F4xx/Include"
+    "${PROJECT_SOURCE_DIR}/Drivers/CMSIS/Include"
+    "${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include"
+    "${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2"
+    "${PROJECT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
 )
 
-target_compile_options(
+    target_compile_options(
     ${TARGET_NAME} PRIVATE
     "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:ASM>>:-g3>"
     "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:-g3>"
@@ -52,6 +41,8 @@ target_compile_options(
     "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:>"
     "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:CXX>>:>"
     "$<$<CONFIG:Debug>:-mcpu=cortex-m4>"
+    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:-std=gnu17>"
+    "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:CXX>>:-std=gnu++17>"
     "$<$<CONFIG:Debug>:-mfpu=fpv4-sp-d16>"
     "$<$<CONFIG:Debug>:-mfloat-abi=hard>"
     "$<$<NOT:$<CONFIG:Debug>>:-mcpu=cortex-m4>"
@@ -59,15 +50,15 @@ target_compile_options(
     "$<$<NOT:$<CONFIG:Debug>>:-mfloat-abi=hard>"
 )
 
-target_link_libraries(
+    target_link_libraries(
     ${TARGET_NAME} PRIVATE
 )
 
-target_link_directories(
+    target_link_directories(
     ${TARGET_NAME} PRIVATE
 )
 
-target_link_options(
+    target_link_options(
     ${TARGET_NAME} PRIVATE
     "$<$<CONFIG:Debug>:-mcpu=cortex-m4>"
     "$<$<CONFIG:Debug>:-mfpu=fpv4-sp-d16>"
@@ -82,9 +73,9 @@ target_link_options(
     "$<$<NOT:$<CONFIG:Debug>>:${PROJECT_SOURCE_DIR}/STM32F446RETX_FLASH.ld>"
 )
 
-list(TRANSFORM RELEASE_SOURCES REPLACE "(.+)" "$<$<NOT:$<CONFIG:Debug>>:/1>")
+    list(TRANSFORM RELEASE_SOURCES REPLACE "(.+)" "$<$<NOT:$<CONFIG:Debug>>:/1>")
 
-target_sources(
+    target_sources(
     ${TARGET_NAME} PRIVATE
     "ethernet/Src/enc28j60.c"
     "ethernet/Src/enchw.c"
@@ -188,7 +179,7 @@ target_sources(
     "Middlewares/Third_Party/FreeRTOS/Source/timers.c"
     "Core/Src/console.c"
     "Core/Src/freertos.c"
-    "Core/Src/main.c"
+    "Core/Src/main.cpp"
     "Core/Src/stm32f4xx_hal_msp.c"
     "Core/Src/stm32f4xx_hal_timebase_tim.c"
     "Core/Src/stm32f4xx_it.c"
@@ -213,18 +204,18 @@ target_sources(
     "Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c"
 )
 
-add_custom_command(
+    add_custom_command(
     TARGET ${TARGET_NAME} POST_BUILD
     COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${TARGET_NAME}>
 )
 
-add_custom_command(
+    add_custom_command(
     TARGET ${TARGET_NAME} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O ihex
     $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.hex
 )
 
-add_custom_command(
+    add_custom_command(
     TARGET ${TARGET_NAME} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O binary
     $<TARGET_FILE:${TARGET_NAME}> ${TARGET_NAME}.bin
