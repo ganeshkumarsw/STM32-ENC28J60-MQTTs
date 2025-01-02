@@ -538,6 +538,7 @@ int enc_read_received_pbuf(enc_device_t *dev, struct pbuf **buf)
 	if (*buf == NULL)
 		DEBUG_PRINT("[enc] failed to allocate buf of length %u, discarding", length);
 	else
+#warning "pbuf chain handling is missing, need to be fixed"
 		enc_RBM(dev, (*buf)->payload, ENC_READLOCATION_ANY, length);
 
 	receive_end(dev, header);
