@@ -204,7 +204,7 @@ int main(void)
 
   /* Create the thread(s) */
   /* creation of defaultTask */
-  std::thread t1 = std::thread();
+  //std::thread t1 = std::thread();
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
