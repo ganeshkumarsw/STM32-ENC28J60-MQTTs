@@ -27,7 +27,6 @@
  * @{
  */
 
-
 // ==================================================
 //    INCLUDE
 // ==================================================
@@ -53,34 +52,33 @@
 // ==================================================
 //     EXTERN VARIABLES
 // ==================================================
-unsigned char MyMACAddr[6] = {0xa1,0xb1,0xc1,0xd1,0xe1,0xf1};
-unsigned char MyIPAddr[4] = {192,168,178,112};
-unsigned char GatewayIPAddr[4] = {192,168,178,1};
-unsigned char MaskIPAddr[4] = {255,255,255,0};
+unsigned char MyMACAddr[6] = {0xa1, 0xb1, 0xc1, 0xd1, 0xe1, 0xf1};
+unsigned char MyIPAddr[4] = {192, 168, 178, 112};
+unsigned char GatewayIPAddr[4] = {192, 168, 178, 1};
+unsigned char MaskIPAddr[4] = {255, 255, 255, 0};
 
 // ==================================================
 //     STATIC FUNCTION DECLARATION
 // ==================================================
 
-static err_t netif_init_	(struct netif *netif) ;
-static err_t netif_output_	(struct netif *netif , struct pbuf *p) ;
-static void  netif_input_	(u16_t eth_data_count , const void * eth_data);
+static err_t netif_init_(struct netif *netif);
+static err_t netif_output_(struct netif *netif, struct pbuf *p);
+static void netif_input_(u16_t eth_data_count, const void *eth_data);
 
-static err_t tcp_close_	 (struct tcp_pcb *pcb) ; /* close tcp connection */
-static err_t tcp_accept_ (void * arg , struct tcp_pcb* newpcb , err_t err); /* create new connection and link callback functions */
-static err_t tcp_recv_ 	 (void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) ; /*received packet -> new data for lowa protocol*/
+static err_t tcp_close_(struct tcp_pcb *pcb);                                       /* close tcp connection */
+static err_t tcp_accept_(void *arg, struct tcp_pcb *newpcb, err_t err);             /* create new connection and link callback functions */
+static err_t tcp_recv_(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err); /*received packet -> new data for lowa protocol*/
 
 /* TODO : In the program but for now those functions are not used */
-static void  tcp_err_ 	(void *arg, err_t err);
-static err_t tcp_poll_  (void *arg, struct tcp_pcb *pcb) ;
-static err_t tcp_sent_ 	( void * arg , struct tcp_pcb * tpcb , u16_t len );  /* called when data has been acknowledged by the last ACK */
-
+static void tcp_err_(void *arg, err_t err);
+static err_t tcp_poll_(void *arg, struct tcp_pcb *pcb);
+static err_t tcp_sent_(void *arg, struct tcp_pcb *tpcb, u16_t len); /* called when data has been acknowledged by the last ACK */
 
 // ==================================================
 //     STATIC VARIABLES
 // ==================================================
-static struct netif 	my_netif ;
-static struct tcp_pcb* 	my_pcb ;
+static struct netif my_netif;
+static struct tcp_pcb *my_pcb;
 
 // ==================================================
 //     GLOBAL VARIABLES
@@ -101,10 +99,9 @@ unsigned char packetReceived[MAX_FRAMELEN];
  *
  * called in sub_main_InitServices() [sub_main.cpp]
  */
-void
-Gateway_Initialize_Ethernet(void)
+void Gateway_Initialize_Ethernet(void)
 {
-	Ethernet_Init(MyMACAddr);
+    Ethernet_Init(MyMACAddr);
 }
 
 /**
@@ -125,81 +122,88 @@ Gateway_Initialize_Ethernet(void)
  * called in sub_main_InitServices() [sub_main.cpp]
  */
 HAL_StatusTypeDef
-Gateway_Initialize_lwIP(void){
-	/* Handle timeouts for NO_SYS==1 */
-	sys_check_timeouts();
+Gateway_Initialize_lwIP(void)
+{
+    /* Handle timeouts for NO_SYS==1 */
+    sys_check_timeouts();
 
-	/* Initialize the LwIP stack */
-	lwip_init();  /* if NO_SYS == 1 */
+    /* Initialize the LwIP stack */
+    lwip_init(); /* if NO_SYS == 1 */
 
-	/* Convert IP address into ip4addr */
-	char ascii_my_ip[15], ascii_gw_ip[15] , ascii_mask_ip[15] ;
-	sprintf(ascii_my_ip,"%d.%d.%d.%d",MyIPAddr[0],MyIPAddr[1],MyIPAddr[2],MyIPAddr[3]);
-	sprintf(ascii_gw_ip,"%d.%d.%d.%d",GatewayIPAddr[0],GatewayIPAddr[1],GatewayIPAddr[2],GatewayIPAddr[3]);
-	sprintf(ascii_mask_ip,"%d.%d.%d.%d",MaskIPAddr[0],MaskIPAddr[1],MaskIPAddr[2],MaskIPAddr[3]);
-	ip4_addr_t myIP , gwIP , maskIP ;
-	if ( ip4addr_aton(ascii_my_ip,&myIP) == 0  ) return HAL_ERROR ;
-	if ( ip4addr_aton(ascii_gw_ip,&gwIP) == 0  ) return HAL_ERROR ;
-	if ( ip4addr_aton(ascii_mask_ip,&maskIP) == 0  ) return HAL_ERROR ;
+    /* Convert IP address into ip4addr */
+    char ascii_my_ip[15], ascii_gw_ip[15], ascii_mask_ip[15];
+    sprintf(ascii_my_ip, "%d.%d.%d.%d", MyIPAddr[0], MyIPAddr[1], MyIPAddr[2], MyIPAddr[3]);
+    sprintf(ascii_gw_ip, "%d.%d.%d.%d", GatewayIPAddr[0], GatewayIPAddr[1], GatewayIPAddr[2], GatewayIPAddr[3]);
+    sprintf(ascii_mask_ip, "%d.%d.%d.%d", MaskIPAddr[0], MaskIPAddr[1], MaskIPAddr[2], MaskIPAddr[3]);
+    ip4_addr_t myIP, gwIP, maskIP;
+    if (ip4addr_aton(ascii_my_ip, &myIP) == 0)
+        return HAL_ERROR;
+    if (ip4addr_aton(ascii_gw_ip, &gwIP) == 0)
+        return HAL_ERROR;
+    if (ip4addr_aton(ascii_mask_ip, &maskIP) == 0)
+        return HAL_ERROR;
 
-	/* Add our netif to LwIP (netif_add calls our driver initialization function )  */
-	netif_add(&my_netif, &myIP, &maskIP, &gwIP, NULL, netif_init_, netif_input);
-	netif_set_default(&my_netif);
-	netif_set_link_up(&my_netif);
-	netif_set_up(&my_netif);
+    /* Add our netif to LwIP (netif_add calls our driver initialization function )  */
+    netif_add(&my_netif, &myIP, &maskIP, &gwIP, NULL, netif_init_, netif_input);
+    netif_set_default(&my_netif);
+    netif_set_link_up(&my_netif);
+    netif_set_up(&my_netif);
 
-	/* Initialize tcp */
-	if (( my_pcb = tcp_new()) == NULL )
-		return HAL_ERROR  ;
-	my_pcb->flags |= TF_NODELAY;
-	if ( tcp_bind(my_pcb,IP_ADDR_ANY,502) != ERR_OK) /* port = 0 => selects an available port */
-		return HAL_ERROR;
-	if ( (my_pcb = tcp_listen(my_pcb)) == NULL )
-		return HAL_ERROR;
-	tcp_accept(my_pcb,tcp_accept_);
-	tcp_bind_netif(my_pcb, &my_netif);  /* bind my_pcb to my_netif */
+    /* Initialize tcp */
+    if ((my_pcb = tcp_new()) == NULL)
+        return HAL_ERROR;
+    my_pcb->flags |= TF_NODELAY;
+    if (tcp_bind(my_pcb, IP_ADDR_ANY, 502) != ERR_OK) /* port = 0 => selects an available port */
+        return HAL_ERROR;
+    if ((my_pcb = tcp_listen(my_pcb)) == NULL)
+        return HAL_ERROR;
+    tcp_accept(my_pcb, tcp_accept_);
+    tcp_bind_netif(my_pcb, &my_netif); /* bind my_pcb to my_netif */
 
-//	#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
-//		CONSOLE("[lwIP] My IP : %s \r\n",ascii_my_ip);
-//		CONSOLE("[lwIP] Gateway IP : %s \r\n",ascii_gw_ip);
-//		CONSOLE("[lwIP] Mask IP : %s \r\n",ascii_mask_ip);
-//		CONSOLE("[lwIP] Netif init done \r\n");
-//		CONSOLE("[lwIP] TCP   init done \r\n");
-//	#endif
+    //	#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
+    //		CONSOLE("[lwIP] My IP : %s \r\n",ascii_my_ip);
+    //		CONSOLE("[lwIP] Gateway IP : %s \r\n",ascii_gw_ip);
+    //		CONSOLE("[lwIP] Mask IP : %s \r\n",ascii_mask_ip);
+    //		CONSOLE("[lwIP] Netif init done \r\n");
+    //		CONSOLE("[lwIP] TCP   init done \r\n");
+    //	#endif
 
-	return HAL_OK ;
+    return HAL_OK;
 }
 
-
 HAL_StatusTypeDef
-Gateway_Initialize_lwIP_mqtt(void){
+Gateway_Initialize_lwIP_mqtt(void)
+{
 
-	/* Handle timeouts for NO_SYS==1 */
-	sys_check_timeouts();
+    /* Handle timeouts for NO_SYS==1 */
+    sys_check_timeouts();
 
-	/* Initialize the LwIP stack */
-	lwip_init();  /* if NO_SYS == 1 */
+    /* Initialize the LwIP stack */
+    lwip_init(); /* if NO_SYS == 1 */
 
-	/* Convert IP address into ip4addr */
-	char ascii_my_ip[15], ascii_gw_ip[15] , ascii_mask_ip[15] ;
-	sprintf(ascii_my_ip,"%d.%d.%d.%d",MyIPAddr[0],MyIPAddr[1],MyIPAddr[2],MyIPAddr[3]);
-	sprintf(ascii_gw_ip,"%d.%d.%d.%d",GatewayIPAddr[0],GatewayIPAddr[1],GatewayIPAddr[2],GatewayIPAddr[3]);
-	sprintf(ascii_mask_ip,"%d.%d.%d.%d",MaskIPAddr[0],MaskIPAddr[1],MaskIPAddr[2],MaskIPAddr[3]);
-	
-	ip4_addr_t myIP , gwIP , maskIP ;
-	if ( ip4addr_aton(ascii_my_ip,&myIP) == 0  ) return HAL_ERROR ;
-	if ( ip4addr_aton(ascii_gw_ip,&gwIP) == 0  ) return HAL_ERROR ;
-	if ( ip4addr_aton(ascii_mask_ip,&maskIP) == 0  ) return HAL_ERROR ;
-	// ip4_addr_set_zero(&gwIP);
-	// ip4_addr_set_zero(&myIP);
-	// ip4_addr_set_zero(&maskIP);
+    /* Convert IP address into ip4addr */
+    char ascii_my_ip[15], ascii_gw_ip[15], ascii_mask_ip[15];
+    sprintf(ascii_my_ip, "%d.%d.%d.%d", MyIPAddr[0], MyIPAddr[1], MyIPAddr[2], MyIPAddr[3]);
+    sprintf(ascii_gw_ip, "%d.%d.%d.%d", GatewayIPAddr[0], GatewayIPAddr[1], GatewayIPAddr[2], GatewayIPAddr[3]);
+    sprintf(ascii_mask_ip, "%d.%d.%d.%d", MaskIPAddr[0], MaskIPAddr[1], MaskIPAddr[2], MaskIPAddr[3]);
 
-	/* Add our netif to LwIP (netif_add calls our driver initialization function )  */
-	netif_add(&my_netif, &myIP, &maskIP, &gwIP, NULL, netif_init_, netif_input);
-	netif_set_default(&my_netif);
-	netif_set_up(&my_netif);
+    ip4_addr_t myIP, gwIP, maskIP;
+    if (ip4addr_aton(ascii_my_ip, &myIP) == 0)
+        return HAL_ERROR;
+    if (ip4addr_aton(ascii_gw_ip, &gwIP) == 0)
+        return HAL_ERROR;
+    if (ip4addr_aton(ascii_mask_ip, &maskIP) == 0)
+        return HAL_ERROR;
+    // ip4_addr_set_zero(&gwIP);
+    // ip4_addr_set_zero(&myIP);
+    // ip4_addr_set_zero(&maskIP);
 
-	return HAL_OK;
+    /* Add our netif to LwIP (netif_add calls our driver initialization function )  */
+    netif_add(&my_netif, &myIP, &maskIP, &gwIP, NULL, netif_init_, netif_input);
+    netif_set_default(&my_netif);
+    netif_set_up(&my_netif);
+
+    return HAL_OK;
 }
 /**
  * This function must be called in the main loop! Received messages through Ethernet will
@@ -212,19 +216,18 @@ Gateway_Initialize_lwIP_mqtt(void){
  *
  * called in SUB_MAIN() [sub_main.cpp]
  */
-void
-Gateway_MainFunction()
+void Gateway_MainFunction()
 {
-	sys_check_timeouts();  /* must be called periodically from your main loop */
-	int len = ENC28J60_PacketReceive(512, packetReceived);
+    sys_check_timeouts(); /* must be called periodically from your main loop */
+    int len = ENC28J60_PacketReceive(512, packetReceived);
 
-	if(len > 0)
-	{
-		#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
-			//CONSOLE("[lwIP] Receive packet %s \r\n",packetReceived);
-		#endif
-		netif_input_(len, packetReceived); /* process the received packet */
-	}
+    if (len > 0)
+    {
+#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
+        // CONSOLE("[lwIP] Receive packet %s \r\n",packetReceived);
+#endif
+        netif_input_(len, packetReceived); /* process the received packet */
+    }
 }
 
 /**
@@ -240,23 +243,27 @@ Gateway_MainFunction()
  * called in LOWA_MGR_Main_Loop() [lowaProtocol.c]
  */
 HAL_StatusTypeDef
-TCPSend (const void * arg , int len){
-	/* tcp_sndbuf returns the number of bytes of space available in the output queue  */
-	if ( len > tcp_sndbuf(my_pcb) ) return HAL_ERROR ; /* check if enough space */
-	/* write data for sending (but does not send it immediately) */
-	// TCP_WRITE_FLAG_COPY: indicates whether the new memory should be allocated for the data to be copied into.
-	// TCP_WRITE_FLAG_MORE: indicates that more data follows. (doesn't work)
-	if ( tcp_write(my_pcb, arg, len, TCP_WRITE_FLAG_COPY) == ERR_MEM ) goto err ; /* ERR_MEM : application should wait until some of the currently enqueued data has been successfully received */
-	if ( tcp_output(my_pcb) != ERR_OK ) goto err ; /* forces all enqueued data to be sent now */
-	tcp_sent(my_pcb,tcp_sent_); /* callback function when ACK of data send is received */
-//	#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
-//		CONSOLE("[lwIP -> TCP Send ] %s \r\n",arg);
-//    #endif
-	return HAL_OK;
+TCPSend(const void *arg, int len)
+{
+    /* tcp_sndbuf returns the number of bytes of space available in the output queue  */
+    if (len > tcp_sndbuf(my_pcb))
+        return HAL_ERROR; /* check if enough space */
+    /* write data for sending (but does not send it immediately) */
+    // TCP_WRITE_FLAG_COPY: indicates whether the new memory should be allocated for the data to be copied into.
+    // TCP_WRITE_FLAG_MORE: indicates that more data follows. (doesn't work)
+    if (tcp_write(my_pcb, arg, len, TCP_WRITE_FLAG_COPY) == ERR_MEM)
+        goto err; /* ERR_MEM : application should wait until some of the currently enqueued data has been successfully received */
+    if (tcp_output(my_pcb) != ERR_OK)
+        goto err;                /* forces all enqueued data to be sent now */
+    tcp_sent(my_pcb, tcp_sent_); /* callback function when ACK of data send is received */
+                                 //	#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
+                                 //		CONSOLE("[lwIP -> TCP Send ] %s \r\n",arg);
+                                 //    #endif
+    return HAL_OK;
 
-	err :
-		tcp_close_(my_pcb);
-		return HAL_ERROR ;
+err:
+    tcp_close_(my_pcb);
+    return HAL_ERROR;
 }
 
 // ==================================================
@@ -283,17 +290,17 @@ TCPSend (const void * arg , int len){
 static err_t
 netif_init_(struct netif *netif)
 {
-  netif->name[0]='M';  // TODO
-  netif->name[1]='0';  // TODO
-  netif->linkoutput = netif_output_;  	/* This function is called by ethernet_output() when it wants to send a packet on the interface. */
-  netif->output     = etharp_output; 	/* For ethernet physical layer, this is usually etharp_output() */
-  //netif->output_ip6 = NULL ; 			/*This function is called by the IPv6 module when it wants to send a packet on the interface. [ethip6_output;]*/
-  netif->mtu        = 255 ; 			/*maximum transfer unit (in bytes)  */
-  netif->flags      = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET ;
-  MIB2_INIT_NETIF(netif, snmp_ifType_ethernet_csmacd, 100000000);
-  SMEMCPY(netif->hwaddr, MyMACAddr, sizeof(netif->hwaddr));
-  netif->hwaddr_len = sizeof(netif->hwaddr);
-  return ERR_OK;
+    netif->name[0] = 'M';              // TODO
+    netif->name[1] = '0';              // TODO
+    netif->linkoutput = netif_output_; /* This function is called by ethernet_output() when it wants to send a packet on the interface. */
+    netif->output = etharp_output;     /* For ethernet physical layer, this is usually etharp_output() */
+    // netif->output_ip6 = NULL ; 			/*This function is called by the IPv6 module when it wants to send a packet on the interface. [ethip6_output;]*/
+    netif->mtu = 255; /*maximum transfer unit (in bytes)  */
+    netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP | NETIF_FLAG_ETHERNET;
+    MIB2_INIT_NETIF(netif, snmp_ifType_ethernet_csmacd, 100000000);
+    SMEMCPY(netif->hwaddr, MyMACAddr, sizeof(netif->hwaddr));
+    netif->hwaddr_len = sizeof(netif->hwaddr);
+    return ERR_OK;
 }
 
 /**
@@ -310,27 +317,33 @@ netif_init_(struct netif *netif)
  * called in the LwIP library by netif
  */
 static err_t
-netif_output_(struct netif *netif , struct pbuf *p){
-	/* Send buffer with Ethernet Chip ENC424  */
-	struct pbuf *q;
-	for (q = p; q != NULL; q = q->next) {
-	    /* Send the data from the pbuf to the interface, one pbuf at a time. The size of the data in each pbuf is kept in the ->len variable. */
-		if (q->len > MAX_LEN_TRAME_TO_SEND ) return ERR_ARG  ;
-		ENC28J60_PacketSend(q->len, (unsigned char*)q->payload); /* send data */
-//		#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
-//	    	CONSOLE("[lwIP]  Sending packet : payload : %s size : %d \r\n",q->payload, q->len);
-//        #endif
-	}
+netif_output_(struct netif *netif, struct pbuf *p)
+{
+    /* Send buffer with Ethernet Chip ENC424  */
+    struct pbuf *q;
+    for (q = p; q != NULL; q = q->next)
+    {
+        /* Send the data from the pbuf to the interface, one pbuf at a time. The size of the data in each pbuf is kept in the ->len variable. */
+        if (q->len > MAX_LEN_TRAME_TO_SEND)
+            return ERR_ARG;
+        ENC28J60_PacketSend(q->len, (unsigned char *)q->payload); /* send data */
+                                                                  //		#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
+                                                                  //	    	CONSOLE("[lwIP]  Sending packet : payload : %s size : %d \r\n",q->payload, q->len);
+                                                                  //        #endif
+    }
 
     /* Update SNMP stats (only if you use SNMP) */
-	LINK_STATS_INC(link.recv);
+    LINK_STATS_INC(link.recv);
     MIB2_STATS_NETIF_ADD(netif, ifinoctets, p->tot_len);
-    if (((u8_t*)p->payload)[0] & 1) {
-      MIB2_STATS_NETIF_INC(netif, ifinucastpkts);
-    } else {
-    	MIB2_STATS_NETIF_INC(netif, ifinnucastpkts);
+    if (((u8_t *)p->payload)[0] & 1)
+    {
+        MIB2_STATS_NETIF_INC(netif, ifinucastpkts);
     }
-	return ERR_OK;
+    else
+    {
+        MIB2_STATS_NETIF_INC(netif, ifinnucastpkts);
+    }
+    return ERR_OK;
 }
 
 /**
@@ -345,22 +358,25 @@ netif_output_(struct netif *netif , struct pbuf *p){
  * called in Gateway_MainFunction()[GatewayComstack.cpp]
  */
 static void
-netif_input_(u16_t eth_data_count , const void * eth_data)
+netif_input_(u16_t eth_data_count, const void *eth_data)
 {
-  /* Allocate pbuf from pool (avoid using heap in interrupts) */
-  struct pbuf* p = pbuf_alloc(PBUF_RAW, eth_data_count, PBUF_POOL);
+    /* Allocate pbuf from pool (avoid using heap in interrupts) */
+    struct pbuf *p = pbuf_alloc(PBUF_RAW, eth_data_count, PBUF_POOL);
 
-  if(p != NULL) {
-	  /* Copy ethernet frame into pbuf */
-	  if ( pbuf_take(p, eth_data, eth_data_count)!= ERR_OK ) {
-		  /* input packet error */
-	  }
-	  /* Check for received frames, feed them to lwIP */
-	  if( my_netif.input(p,&my_netif) != ERR_OK ){
-		  /* input packet error */
-		  pbuf_free(p);
-	  }
-  }
+    if (p != NULL)
+    {
+        /* Copy ethernet frame into pbuf */
+        if (pbuf_take(p, eth_data, eth_data_count) != ERR_OK)
+        {
+            /* input packet error */
+        }
+        /* Check for received frames, feed them to lwIP */
+        if (my_netif.input(p, &my_netif) != ERR_OK)
+        {
+            /* input packet error */
+            pbuf_free(p);
+        }
+    }
 }
 
 /**
@@ -382,13 +398,14 @@ netif_input_(u16_t eth_data_count , const void * eth_data)
  * 	- tcp_recv_() [GatewayComstack.cpp]
  */
 static err_t
-tcp_close_	(struct tcp_pcb *pcb) {
-	/* close callback functions */
-	 tcp_arg(pcb, NULL);
-	 tcp_sent(pcb, NULL);
-	 tcp_recv(pcb, NULL);
-	 tcp_close(pcb);
-	 return ERR_OK;
+tcp_close_(struct tcp_pcb *pcb)
+{
+    /* close callback functions */
+    tcp_arg(pcb, NULL);
+    tcp_sent(pcb, NULL);
+    tcp_recv(pcb, NULL);
+    tcp_close(pcb);
+    return ERR_OK;
 }
 
 /**
@@ -411,13 +428,15 @@ tcp_close_	(struct tcp_pcb *pcb) {
  * 	- tcp_recv_() [GatewayComstack.cpp]
  */
 static err_t
-tcp_accept_(void * arg , struct tcp_pcb* newpcb , err_t err){
-	/* associate callback functions to new connection */
-	LWIP_UNUSED_ARG(arg);
-	LWIP_UNUSED_ARG(err);
+tcp_accept_(void *arg, struct tcp_pcb *newpcb, err_t err)
+{
+    /* associate callback functions to new connection */
+    LWIP_UNUSED_ARG(arg);
+    LWIP_UNUSED_ARG(err);
 
-	/* check if another connection already exist */
-	if ( my_pcb->state != LISTEN && my_pcb->state != CLOSED && my_pcb->state != ESTABLISHED ) tcp_close_(my_pcb);
+    /* check if another connection already exist */
+    if (my_pcb->state != LISTEN && my_pcb->state != CLOSED && my_pcb->state != ESTABLISHED)
+        tcp_close_(my_pcb);
 
     /* set priority for the newly accepted tcp connection newpcb */
     tcp_setprio(newpcb, TCP_PRIO_MIN);
@@ -430,8 +449,8 @@ tcp_accept_(void * arg , struct tcp_pcb* newpcb , err_t err){
     /* initialize lwip tcp_poll callback function for newpcb */
     tcp_poll(newpcb, tcp_poll_, 1);
 
-    my_pcb = newpcb ; /* associate pcb initialize to my_pcb */
-    my_pcb->flags |= TF_NODELAY ;
+    my_pcb = newpcb; /* associate pcb initialize to my_pcb */
+    my_pcb->flags |= TF_NODELAY;
     return ERR_OK;
 }
 
@@ -453,25 +472,28 @@ tcp_accept_(void * arg , struct tcp_pcb* newpcb , err_t err){
  * called in by the lwIP library (the callback function is set with tcp_recv(newpcb, tcp_recv_) in tcp_accept_()
  */
 static err_t
-tcp_recv_ 	(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err){
-	/* called on reception of data on TCP */
-	LWIP_UNUSED_ARG(arg);
+tcp_recv_(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err)
+{
+    /* called on reception of data on TCP */
+    LWIP_UNUSED_ARG(arg);
 
-	if ( err == ERR_OK && p!= NULL ){
-		//LOWA_MGR_Read_Ethernet(p->tot_len,p->payload); /* take received data */
-		tcp_recved(tpcb, p->tot_len); /* application has taken the data */
-		pbuf_free(p); /* free packet buffer */
+    if (err == ERR_OK && p != NULL)
+    {
+        // LOWA_MGR_Read_Ethernet(p->tot_len,p->payload); /* take received data */
+        tcp_recved(tpcb, p->tot_len); /* application has taken the data */
+        pbuf_free(p);                 /* free packet buffer */
 
-//		#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
-//			CONSOLE("[lwIP : TCP Receive] Data : %s Size : %d \r\n",p->payload,p->tot_len);
-//		#endif
-	}
+        //		#if CONSOLE_ENABLE_DEBUG_ETHERNET == CONSOLE__OPTION__ENABLED
+        //			CONSOLE("[lwIP : TCP Receive] Data : %s Size : %d \r\n",p->payload,p->tot_len);
+        //		#endif
+    }
 
-	// Close connection if empty packet and no error
-	if ( err == ERR_OK && p == NULL ){
-		tcp_close_(tpcb);
-	}
-	return ERR_OK;
+    // Close connection if empty packet and no error
+    if (err == ERR_OK && p == NULL)
+    {
+        tcp_close_(tpcb);
+    }
+    return ERR_OK;
 }
 
 /**
@@ -492,7 +514,8 @@ tcp_recv_ 	(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err){
  * @todo This function isn't used in the program for now !
  */
 static void
-tcp_err_ 	(void *arg, err_t err){
+tcp_err_(void *arg, err_t err)
+{
 }
 
 /**
@@ -515,8 +538,9 @@ tcp_err_ 	(void *arg, err_t err){
  * @todo This function isn't used in the program for now !
  */
 static err_t
-tcp_poll_  (void *arg, struct tcp_pcb *pcb) {
-	return ERR_OK;
+tcp_poll_(void *arg, struct tcp_pcb *pcb)
+{
+    return ERR_OK;
 }
 
 /**
@@ -533,20 +557,20 @@ tcp_poll_  (void *arg, struct tcp_pcb *pcb) {
  * @todo This function isn't used in the program for now !
  */
 static err_t
-tcp_sent_ ( void * arg , struct tcp_pcb * tpcb , u16_t len ){
-	return ERR_OK;
+tcp_sent_(void *arg, struct tcp_pcb *tpcb, u16_t len)
+{
+    return ERR_OK;
 }
 
 /**
-  * @brief  Returns the current time in milliseconds
-  *         when LWIP_TIMERS == 1 and NO_SYS == 1
-  * @param  None
-  * @retval Current Time value
-  */
+ * @brief  Returns the current time in milliseconds
+ *         when LWIP_TIMERS == 1 and NO_SYS == 1
+ * @param  None
+ * @retval Current Time value
+ */
 u32_t sys_now(void)
 {
-  return HAL_GetTick();
+    return HAL_GetTick();
 }
-
 
 /* END OF FILE */

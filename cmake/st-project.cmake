@@ -52,6 +52,7 @@ function(add_st_target_properties TARGET_NAME)
         ${TARGET_NAME} PRIVATE
         "-mfpu=fpv4-sp-d16"
         "-mfloat-abi=hard"
+        "-Wl,--gc-sections"
         "$<$<CXX_COMPILER_ID:Clang>:--target=armv7em-none-eabi>"
         "$<$<CXX_COMPILER_ID:GNU>:-mcpu=cortex-m4>"
         #"$<$<CXX_COMPILER_ID:GNU>:--specs=nano.specs>"

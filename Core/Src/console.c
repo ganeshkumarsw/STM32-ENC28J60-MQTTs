@@ -31,83 +31,83 @@ static char DBG_BUFFER[DBG_BUF_LEN];
 
 void Console_INFO(const char *fmt, ...)
 {
-	va_list args;
-	int len = 0;
+    va_list args;
+    int len = 0;
 
-	///// Prepare the output buffer
-	len += sprintf(&DBG_BUFFER[len], "\033[32m[%lu] ", HAL_GetTick());
-	if (len > 0)
-	{
-		va_start(args, fmt);
-		len += vsprintf(&DBG_BUFFER[len], fmt, args);
-		va_end(args);
-		if (len > 0)
-		{
-			len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
-			HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
-		}
-	}
+    ///// Prepare the output buffer
+    len += sprintf(&DBG_BUFFER[len], "\033[32m[%u] ", HAL_GetTick());
+    if (len > 0)
+    {
+        va_start(args, fmt);
+        len += vsprintf(&DBG_BUFFER[len], fmt, args);
+        va_end(args);
+        if (len > 0)
+        {
+            len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
+            HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
+        }
+    }
 }
 
 void Console_DEBUG(const char *fmt, ...)
 {
-	va_list args;
-	int len = 0;
+    va_list args;
+    int len = 0;
 
-	///// Prepare the output buffer
-	len += sprintf(&DBG_BUFFER[len], "\033[36m[%lu] ",
-				   HAL_GetTick());
-	if (len > 0)
-	{
-		va_start(args, fmt);
-		len += vsprintf(&DBG_BUFFER[len], fmt, args);
-		va_end(args);
-		if (len > 0)
-		{
-			len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
-			HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
-		}
-	}
+    ///// Prepare the output buffer
+    len += sprintf(&DBG_BUFFER[len], "\033[36m[%u] ",
+                   HAL_GetTick());
+    if (len > 0)
+    {
+        va_start(args, fmt);
+        len += vsprintf(&DBG_BUFFER[len], fmt, args);
+        va_end(args);
+        if (len > 0)
+        {
+            len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
+            HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
+        }
+    }
 }
 
 void Console_WARNING(const char *fmt, ...)
 {
-	va_list args;
-	int len = 0;
+    va_list args;
+    int len = 0;
 
-	///// Prepare the output buffer
-	len += sprintf(&DBG_BUFFER[len], "\033[33m[%lu] ", HAL_GetTick());
-	if (len > 0)
-	{
-		va_start(args, fmt);
-		len += vsprintf(&DBG_BUFFER[len], fmt, args);
-		va_end(args);
-		if (len > 0)
-		{
-			len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
-			HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
-		}
-	}
+    ///// Prepare the output buffer
+    len += sprintf(&DBG_BUFFER[len], "\033[33m[%u] ", HAL_GetTick());
+    if (len > 0)
+    {
+        va_start(args, fmt);
+        len += vsprintf(&DBG_BUFFER[len], fmt, args);
+        va_end(args);
+        if (len > 0)
+        {
+            len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
+            HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
+        }
+    }
 }
 
 void Console_ERROR(const char *fmt, ...)
 {
-	va_list args;
-	int len = 0;
+    va_list args;
+    int len = 0;
 
-	///// Prepare the output buffer
-	len += sprintf(&DBG_BUFFER[len], "\033[31m[%lu] ", HAL_GetTick());
-	if (len > 0)
-	{
-		va_start(args, fmt);
-		len += vsprintf(&DBG_BUFFER[len], fmt, args);
-		va_end(args);
-		if (len > 0)
-		{
-			len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
-			HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
-		}
-	}
+    ///// Prepare the output buffer
+    len += sprintf(&DBG_BUFFER[len], "\033[31m[%u] ", HAL_GetTick());
+    if (len > 0)
+    {
+        va_start(args, fmt);
+        len += vsprintf(&DBG_BUFFER[len], fmt, args);
+        va_end(args);
+        if (len > 0)
+        {
+            len += sprintf(&DBG_BUFFER[len], "\033[0m\r\n");
+            HAL_UART_Transmit(DEBUG_PORT, (uint8_t *)(DBG_BUFFER), len, len);
+        }
+    }
 }
 
 /* USER CODE END 0 */
