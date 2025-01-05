@@ -27,22 +27,13 @@ function(add_st_target_properties TARGET_NAME)
 
     target_compile_options(
         ${TARGET_NAME} PRIVATE
-        "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:ASM>>:-g3>"
-        "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:-g3>"
-        "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CXX>>:-g3>"
-        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:ASM>>:-g0>"
-        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:-g0>"
-        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:CXX>>:-g0>"
-        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:-Os>"
-        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:CXX>>:-Os>"
-        "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C>>:>"
-        "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:CXX>>:>"
-        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C>>:>"
-        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:CXX>>:>"
-
-        #"-mcpu=cortex-m4"
-        "--target=armv7em-none-eabi"
-        #"-march=armv7em"
+        "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:ASM,C,CXX>>:-g3>"
+        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:ASM,C,CXX>>:-g0>"
+        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C,CXX>>:-Os>"
+        "$<$<AND:$<CONFIG:Debug>,$<COMPILE_LANGUAGE:C,CXX>>:>"
+        "$<$<AND:$<NOT:$<CONFIG:Debug>>,$<COMPILE_LANGUAGE:C,CXX>>:>"
+        "$<$<CXX_COMPILER_ID:Clang>:--target=armv7em-none-eabi>"
+        "$<$<CXX_COMPILER_ID:GNU>:-mcpu=cortex-m4>"
         "$<$<COMPILE_LANGUAGE:C>:-std=gnu17>"
         "$<$<COMPILE_LANGUAGE:CXX>:-std=gnu++17>"
         "-mfpu=fpv4-sp-d16"
@@ -59,13 +50,12 @@ function(add_st_target_properties TARGET_NAME)
 
     target_link_options(
         ${TARGET_NAME} PRIVATE
-        # "-mcpu=cortex-m4"
         "-mfpu=fpv4-sp-d16"
-        # "-mfloat-abi=hard"
-        # "--specs=nosys.specs"
-        "--target=armv7em-none-eabi"
-        "-march=armv7em"
-        # "--specs=nano.specs"
+        "-mfloat-abi=hard"
+        "$<$<CXX_COMPILER_ID:Clang>:--target=armv7em-none-eabi>"
+        "$<$<CXX_COMPILER_ID:GNU>:-mcpu=cortex-m4>"
+        #"$<$<CXX_COMPILER_ID:GNU>:--specs=nano.specs>"
+        "$<$<CXX_COMPILER_ID:GNU>:--specs=nosys.specs>"
         -T
         "$<$<CONFIG:Debug>:${PROJECT_SOURCE_DIR}/STM32F446RETX_FLASH.ld>"
         "$<$<NOT:$<CONFIG:Debug>>:${PROJECT_SOURCE_DIR}/STM32F446RETX_FLASH.ld>"

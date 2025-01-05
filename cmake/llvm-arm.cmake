@@ -7,7 +7,7 @@ set(CMAKE_SYSTEM_PROCESSOR          arm)
 
 set(TOOLCHAIN_FE_PREFIX             "clang")
 set(TOOLCHAIN_BE_PREFIX             "llvm")
-set(FLAGS                           "-fdata-sections -ffunction-sections")
+set(FLAGS                           "-fdata-sections -ffunction-sections -fstack-usage -Wl,--gc-sections")
 set(ASM_FLAGS                       "-x assembler-with-cpp")
 set(CPP_FLAGS                       "-fno-rtti -fno-exceptions -fno-threadsafe-statics")
 
